@@ -1,0 +1,38 @@
+name: release
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 8
+      fail-fast: false
+      matrix:
+        goos:
+        - {name: darwin, suffix: ""}
+        - {name: linux, suffix: ""}
+        - {name: windows, suffix: ".exe"}
+        goarch:
+        - amd64
+        - arm64
+    env:
+      CGO_ENABLED: "0"
+      GOOS: ${{matrix.goos.name}}
+      GOARCH: ${{matrix.goarch}}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Setup Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: 1.23
+    - name: Build
+      run: go build -ldflags '-s -w' -o kgrok-${{matrix.goos.name}}-${{matrix.goarch}}${{matrix.goos.suffix}} *.go
+    - name: Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: kgrok-*
