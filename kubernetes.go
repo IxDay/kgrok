@@ -27,6 +27,7 @@ import (
 )
 
 type Client struct {
+	namespace string
 	*dynamic.DynamicClient
 	*rest.Config
 	clientcmd.ClientConfig
@@ -37,12 +38,17 @@ func (c *Client) DefaultNS(kd *KubeDef) error {
 	if ns := kd.GetNamespace(); ns != "" {
 		return nil
 	}
-	ns, _, err := c.ClientConfig.Namespace()
-	kd.SetNamespace(ns)
-	return err
+	if c.namespace != "" {
+		kd.SetNamespace(c.namespace)
+		return nil
+	} else {
+		ns, _, err := c.ClientConfig.Namespace()
+		kd.SetNamespace(ns)
+		return err
+	}
 }
 
-func NewClient() (*Client, error) {
+func NewClient(namespace string) (*Client, error) {
 	localCfg := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
 		clientcmd.NewDefaultClientConfigLoadingRules(),
 		&clientcmd.ConfigOverrides{},
@@ -71,6 +77,7 @@ func NewClient() (*Client, error) {
 		DynamicClient: client,
 		ClientConfig:  localCfg,
 		Config:        restCfg,
+		namespace:     namespace,
 	}, nil
 }
 

@@ -16,9 +16,10 @@ var (
 	name = "kgrok"
 	port = 28688
 
-	path    string
-	dryRun  bool
-	decoder = yaml.NewDecodingSerializer(
+	path      string
+	namespace string
+	dryRun    bool
+	decoder   = yaml.NewDecodingSerializer(
 		unstructured.UnstructuredJSONScheme,
 	)
 	command = &cobra.Command{
@@ -38,6 +39,8 @@ func init() {
 	flags.StringVar(&path, "template", "", "File to read template from")
 	flags.BoolVar(&dryRun, "dry-run", false,
 		"Dry run mode, only render template, do not apply or tunnel anything")
+	flags.StringVarP(&namespace, "namespace", "n", "",
+		"Namespace to deploy all the templates to (override the one from config)")
 }
 
 func main() {
@@ -73,7 +76,7 @@ func run(portMapping []string) error {
 		return err
 	}
 
-	client, err := NewClient()
+	client, err := NewClient(namespace)
 	if err != nil {
 		return err
 	}
