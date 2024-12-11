@@ -17,6 +17,7 @@ var (
 	port = 28688
 
 	path    string
+	dryRun  bool
 	decoder = yaml.NewDecodingSerializer(
 		unstructured.UnstructuredJSONScheme,
 	)
@@ -35,6 +36,8 @@ var (
 func init() {
 	flags := command.PersistentFlags()
 	flags.StringVar(&path, "template", "", "File to read template from")
+	flags.BoolVar(&dryRun, "dry-run", false,
+		"Dry run mode, only render template, do not apply or tunnel anything")
 }
 
 func main() {
@@ -73,6 +76,10 @@ func run(portMapping []string) error {
 	client, err := NewClient()
 	if err != nil {
 		return err
+	}
+
+	if dryRun {
+		return client.KubeDump(yaml)
 	}
 
 	definitions := map[string]*KubeDef{}

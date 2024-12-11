@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/mdobak/go-xerrors"
+	"gopkg.in/yaml.v2"
 	"k8s.io/apimachinery/pkg/api/meta"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -117,6 +118,7 @@ func (c *Client) dynamicResource(kd *KubeDef) (dr dynamic.ResourceInterface, err
 		}
 		dr = c.Resource(mapping.Resource).Namespace(kd.GetNamespace())
 	} else {
+		kd.SetNamespace("")
 		// for cluster-wide resources
 		dr = c.Resource(mapping.Resource)
 	}
@@ -142,6 +144,23 @@ func (c *Client) KubeApply(yaml *bytes.Buffer) (map[string]*KubeDef, error) {
 		kds[kd.GetKind()] = kd
 	}
 	return kds, nil
+}
+
+func (c *Client) KubeDump(buffer *bytes.Buffer) error {
+	for kd, err := range YieldKubeDef(buffer) {
+		if err != nil {
+			return err
+		}
+		if _, err := c.dynamicResource(kd); err != nil {
+			return err
+		}
+		buf, err := yaml.Marshal(kd.Object)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("---\n%s", buf)
+	}
+	return nil
 }
 
 func (c *Client) KubeDelete(kds map[string]*KubeDef) error {
