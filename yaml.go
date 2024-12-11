@@ -85,7 +85,7 @@ func YieldKubeDef(buffer *bytes.Buffer) iter.Seq2[*KubeDef, error] {
 					yield(nil, err)
 				}
 				return
-			} else if buf[0] == 10 { // empty YAML (this is line break)
+			} else if len(buf) == 0 || len(buf) == 1 { // empty YAML (this is line break)
 				continue
 			}
 			// 3. Decode YAML manifest into unstructured.Unstructured
