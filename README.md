@@ -111,7 +111,8 @@ Namespaces labeled with `environment: staging` can now create `HTTPRoute` object
 
 ### Use KGrok to expose your local ports behind an HTTPS endpoint
 
-KGrok can deploy the necessary resources (Pod, Service, and HTTPRoute) with a single command. Here’s an example template:
+KGrok can deploy the necessary resources (Pod, Service, and HTTPRoute) with a single command. Here’s an example template to tunnel
+the local port 8080 to your kubernetes cluster:
 
 ```yaml
 cat <<EOF | kgrok 8080

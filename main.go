@@ -23,9 +23,32 @@ var (
 		unstructured.UnstructuredJSONScheme,
 	)
 	command = &cobra.Command{
-		Use:   name + " [flags]",
-		Short: ".",
-		Args:  cobra.MinimumNArgs(1), // we want at least one port mapping
+		Use: name + " [flags] [LOCAL_PORT:]REMOTE_PORT [...[LOCAL_PORT_N:]REMOTE_PORT_N]",
+		Long: "This command adds a new service and deployment to the cluster (or applies any template provided through stdin), " +
+			"and establishes a tunnel from localhost to one or more remote ports.\n\n" +
+			"The LOCAL_PORT:REMOTE_PORT format follows the same conventions as kubectl port-forward. " +
+			"For more details, please refer to the official documentation.",
+		Example: `
+# using a template to create an HTTPRoute, a service and a deployment tunneling from port 8080
+cat <<EOF | ` + name + ` 8080
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: foo-staging
+spec:
+  hostnames:
+    - foo.staging.example.com
+  parentRefs:
+    - name: contour
+      namespace: contour
+      sectionName: example-staging
+  rules:
+    - backendRefs:
+        - kind: Service
+          name: {{.Name}}
+          port: 8081` + string(tplt) + "EOF",
+		Args: cobra.MinimumNArgs(1), // we want at least one port mapping
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// https://github.com/spf13/cobra/issues/340
 			cmd.SilenceUsage = true
